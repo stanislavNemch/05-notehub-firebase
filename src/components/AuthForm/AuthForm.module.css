@@ -1,0 +1,60 @@
+.container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background-color: #f8f9fa;
+}
+
+.form {
+    width: 100%;
+    max-width: 400px;
+    padding: 24px;
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.form h2 {
+    margin: 0 0 8px 0;
+    text-align: center;
+    color: #212529;
+}
+
+.input {
+    padding: 10px 12px;
+    font-size: 16px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    width: 100%;
+    box-sizing: border-box; /* Важливо для правильного рендерингу */
+}
+
+.button {
+    padding: 10px 16px;
+    font-size: 16px;
+    color: #fff;
+    background-color: #0d6efd;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.button:hover {
+    background-color: #0b5ed7;
+}
+
+.toggle {
+    color: #0d6efd;
+    text-align: center;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.toggle:hover {
+    text-decoration: underline;
+}
