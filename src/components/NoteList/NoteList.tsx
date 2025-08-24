@@ -18,6 +18,7 @@ const NoteList = ({ notes, onDelete, onEdit }: NoteListProps) => {
                     </div>
                     <div className={css.footer}>
                         <span className={css.tag}>{note.tag}</span>
+                        {/* Обгортка для кнопок */}
                         <div className={css.actions}>
                             <button
                                 className={css.buttonEdit}

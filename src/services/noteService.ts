@@ -13,12 +13,14 @@ import {
     updateDoc,
     type QueryDocumentSnapshot,
     type DocumentData,
+    type QueryConstraint, // ВАЖЛИВО: імпортуємо тип для умов запиту
 } from "firebase/firestore";
 import { db, auth } from "../firebase";
 import type { NewNotePayload, Note } from "../types/note";
 
+// Інтерфейс для параметрів функції
 interface FetchNotesParams {
-    pageParam?: QueryDocumentSnapshot<DocumentData>;
+    pageParam?: QueryDocumentSnapshot<DocumentData>; // Курсор для пагінації
     searchQuery?: string;
 }
 
@@ -28,29 +30,35 @@ export const fetchNotes = async ({
     searchQuery,
 }: FetchNotesParams) => {
     const user = auth.currentUser;
-    if (!user) return { notes: [], nextCursor: undefined };
+    if (!user) {
+        // Якщо користувач не увійшов, повертаємо порожній результат
+        return { notes: [], nextCursor: undefined };
+    }
 
     const notesPerPage = 12;
     const notesCollectionRef = collection(db, "notes");
 
-    // Збираємо умови для запиту
-    const constraints = [
+    // ВИПРАВЛЕННЯ: Явно вказуємо тип масиву для умов запиту
+    const constraints: QueryConstraint[] = [
         where("userId", "==", user.uid),
         orderBy("createdAt", "desc"),
     ];
 
+    // Додаємо умову пошуку, якщо вона є
     if (searchQuery) {
-        // Firestore може робити пошук тільки по повному збігу або по префіксу
         constraints.push(where("title", ">=", searchQuery));
         constraints.push(where("title", "<=", searchQuery + "\uf8ff"));
     }
 
+    // Додаємо курсор для пагінації, якщо він переданий
     if (pageParam) {
         constraints.push(startAfter(pageParam));
     }
 
+    // Додаємо ліміт на кількість записів
     constraints.push(limit(notesPerPage));
 
+    // Створюємо фінальний запит, передаючи масив умов
     const q = query(notesCollectionRef, ...constraints);
     const querySnapshot = await getDocs(q);
 
@@ -59,17 +67,17 @@ export const fetchNotes = async ({
         ...doc.data(),
     })) as Note[];
 
+    // Останній документ на сторінці буде нашим "курсором" для наступної
     const nextCursor = querySnapshot.docs[querySnapshot.docs.length - 1];
 
     return { notes, nextCursor };
 };
 
-// Функція створення нотатки (без змін)
+// Функція створення нотатки
 export const createNote = async (noteData: NewNotePayload) => {
     const user = auth.currentUser;
-    if (!user) {
-        throw new Error("User is not authenticated!");
-    }
+    if (!user) throw new Error("User is not authenticated!");
+
     const docRef = await addDoc(collection(db, "notes"), {
         ...noteData,
         userId: user.uid,
@@ -78,13 +86,13 @@ export const createNote = async (noteData: NewNotePayload) => {
     return docRef.id;
 };
 
-// Функція видалення нотатки (без змін)
+// Функція видалення нотатки
 export const deleteNote = async (noteId: string) => {
     const noteDocRef = doc(db, "notes", noteId);
     await deleteDoc(noteDocRef);
 };
 
-// НОВА ФУНКЦІЯ: оновлення нотатки
+// Функція оновлення нотатки
 export const updateNote = async (noteId: string, noteData: NewNotePayload) => {
     const noteDocRef = doc(db, "notes", noteId);
     await updateDoc(noteDocRef, {

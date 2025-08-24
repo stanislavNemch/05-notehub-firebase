@@ -52,3 +52,9 @@
 .button:hover {
     background-color: #0b5ed7;
 }
+
+.loadMoreContainer {
+    display: flex;
+    justify-content: center;
+    margin-top: 24px;
+}

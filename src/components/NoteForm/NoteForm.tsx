@@ -1,4 +1,10 @@
-import { Formik, Form } from "formik";
+// src/components/NoteForm/NoteForm.tsx
+import {
+    Formik,
+    Form,
+    Field,
+    ErrorMessage as FormikErrorMessage,
+} from "formik";
 import * as Yup from "yup";
 import type { NewNotePayload, NoteTag } from "../../types/note";
 import css from "./NoteForm.module.css";
@@ -24,7 +30,7 @@ interface NoteFormProps {
     onSubmit: (values: NewNotePayload) => void;
     onCancel: () => void;
     isSubmitting: boolean;
-    initialData?: NewNotePayload; // Необов'язкові дані для режиму редагування
+    initialData?: NewNotePayload;
 }
 
 const NoteForm = ({
@@ -39,18 +45,69 @@ const NoteForm = ({
         <Formik
             initialValues={initialValues}
             validationSchema={validationSchema}
-            enableReinitialize // Дозволяє формі оновлюватись, коли змінюється initialData
+            enableReinitialize // Дозволяє формі оновлюватись при зміні initialData
             onSubmit={(values, actions) => {
                 onSubmit(values);
                 if (!initialData) {
-                    // Очищуємо форму тільки при створенні
+                    // Очищуємо форму тільки при створенні нової нотатки
                     actions.resetForm();
                 }
             }}
         >
             {({ isValid }) => (
                 <Form className={css.form}>
-                    {/* ... поля форми (title, content, tag) без змін ... */}
+                    <div className={css.formGroup}>
+                        <label htmlFor="title">Title</label>
+                        <Field
+                            id="title"
+                            type="text"
+                            name="title"
+                            className={css.input}
+                        />
+                        <FormikErrorMessage
+                            name="title"
+                            component="span"
+                            className={css.error}
+                        />
+                    </div>
+
+                    <div className={css.formGroup}>
+                        <label htmlFor="content">Content</label>
+                        <Field
+                            id="content"
+                            as="textarea"
+                            name="content"
+                            rows={8}
+                            className={css.textarea}
+                        />
+                        <FormikErrorMessage
+                            name="content"
+                            component="span"
+                            className={css.error}
+                        />
+                    </div>
+
+                    <div className={css.formGroup}>
+                        <label htmlFor="tag">Tag</label>
+                        <Field
+                            id="tag"
+                            as="select"
+                            name="tag"
+                            className={css.select}
+                        >
+                            <option value="Todo">Todo</option>
+                            <option value="Work">Work</option>
+                            <option value="Personal">Personal</option>
+                            <option value="Meeting">Meeting</option>
+                            <option value="Shopping">Shopping</option>
+                        </Field>
+                        <FormikErrorMessage
+                            name="tag"
+                            component="span"
+                            className={css.error}
+                        />
+                    </div>
+
                     <div className={css.actions}>
                         <button
                             type="button"

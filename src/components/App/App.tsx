@@ -1,11 +1,10 @@
-// src/components/App/App.tsx
 import { useState, useEffect } from "react";
 import {
-    useMutation,
     useQueryClient,
+    useMutation,
     useInfiniteQuery,
 } from "@tanstack/react-query";
-import { onAuthStateChanged, type User, signOut } from "firebase/auth";
+import { onAuthStateChanged, signOut, type User } from "firebase/auth";
 import toast from "react-hot-toast";
 import { useDebounce } from "use-debounce";
 import { auth } from "../../firebase";
@@ -119,8 +118,21 @@ const App = () => {
         openModal();
     };
 
+    const handleDelete = (noteId: string) => {
+        deleteNoteMutation.mutate(noteId);
+    };
+
     const handleCreateOrUpdateNote = (values: NewNotePayload) => {
         if (editingNote) {
+            const titleExists = notes.some(
+                (note) =>
+                    note.id !== editingNote.id &&
+                    note.title.toLowerCase() === values.title.toLowerCase()
+            );
+            if (titleExists) {
+                toast.error("A note with this title already exists!");
+                return;
+            }
             updateNoteMutation.mutate({
                 noteId: editingNote.id,
                 noteData: values,
@@ -162,7 +174,7 @@ const App = () => {
                 {notes.length > 0 && (
                     <NoteList
                         notes={notes}
-                        onDelete={deleteNoteMutation.mutate}
+                        onDelete={handleDelete}
                         onEdit={handleEdit}
                     />
                 )}
@@ -172,13 +184,7 @@ const App = () => {
                     </p>
                 )}
                 {hasNextPage && (
-                    <div
-                        style={{
-                            display: "flex",
-                            justifyContent: "center",
-                            marginTop: "20px",
-                        }}
-                    >
+                    <div className={css.loadMoreContainer}>
                         <button
                             onClick={() => fetchNextPage()}
                             disabled={isFetchingNextPage}
