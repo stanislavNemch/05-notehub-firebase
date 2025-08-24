@@ -4,27 +4,34 @@ import css from "./NoteList.module.css";
 interface NoteListProps {
     notes: Note[];
     onDelete: (noteId: string) => void;
+    onEdit: (note: Note) => void; // Новий пропс для редагування
 }
 
-const NoteList = ({ notes, onDelete }: NoteListProps) => {
+const NoteList = ({ notes, onDelete, onEdit }: NoteListProps) => {
     return (
         <ul className={css.list}>
-            {notes.map(({ id, title, content, tag }) => (
-                // ВИПРАВЛЕННЯ: Використовуємо 'id' замість '_id'
-                <li key={id} className={css.listItem}>
+            {notes.map((note) => (
+                <li key={note.id} className={css.listItem}>
                     <div>
-                        <h2 className={css.title}>{title}</h2>
-                        <p className={css.content}>{content}</p>
+                        <h2 className={css.title}>{note.title}</h2>
+                        <p className={css.content}>{note.content}</p>
                     </div>
                     <div className={css.footer}>
-                        <span className={css.tag}>{tag}</span>
-                        {/* ВИПРАВЛЕННЯ: Передаємо 'id' в функцію видалення */}
-                        <button
-                            className={css.button}
-                            onClick={() => onDelete(id)}
-                        >
-                            Delete
-                        </button>
+                        <span className={css.tag}>{note.tag}</span>
+                        <div className={css.actions}>
+                            <button
+                                className={css.buttonEdit}
+                                onClick={() => onEdit(note)} // Викликаємо onEdit з даними нотатки
+                            >
+                                Edit
+                            </button>
+                            <button
+                                className={css.button}
+                                onClick={() => onDelete(note.id)}
+                            >
+                                Delete
+                            </button>
+                        </div>
                     </div>
                 </li>
             ))}
