@@ -1,3 +1,4 @@
+// src/components/App/App.tsx
 import { useState, useEffect } from "react";
 import {
     useQueryClient,
@@ -60,8 +61,10 @@ const App = () => {
         initialPageParam: undefined,
         enabled: !!user,
     });
+
     const notes = data?.pages.flatMap((page) => page.notes) ?? [];
 
+    // ... мутації create, update, delete залишаються без змін ...
     const createNoteMutation = useMutation({
         mutationFn: createNote,
         onSuccess: () => {
