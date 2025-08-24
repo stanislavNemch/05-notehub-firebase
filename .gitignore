@@ -26,3 +26,4 @@ firebase.ts
 
 # Firebase local config
 src/firebase.ts
+.firebase/hosting.ZGlzdA.cache
