@@ -1,9 +1,9 @@
-// src/components/App/App.tsx
 import { useState, useEffect } from "react";
 import {
     useQueryClient,
     useMutation,
     useInfiniteQuery,
+    type InfiniteData,
 } from "@tanstack/react-query";
 import { onAuthStateChanged, signOut, type User } from "firebase/auth";
 import toast from "react-hot-toast";
@@ -24,6 +24,8 @@ import Loader from "../Loader/Loader";
 import ErrorMessage from "../ErrorMessage/ErrorMessage";
 import AuthForm from "../AuthForm/AuthForm";
 import SearchBox from "../SearchBox/SearchBox";
+type FetchNotesResult = Awaited<ReturnType<typeof fetchNotes>>;
+type PageParam = FetchNotesResult["nextCursor"];
 
 import css from "./App.module.css";
 
@@ -53,21 +55,56 @@ const App = () => {
         isLoading: isNotesLoading,
         isError,
         error,
-    } = useInfiniteQuery({
+    } = useInfiniteQuery<
+        FetchNotesResult,
+        Error,
+        InfiniteData<FetchNotesResult>,
+        [string, string | undefined, string],
+        PageParam
+    >({
         queryKey: ["notes", user?.uid, debouncedSearch],
         queryFn: ({ pageParam }) =>
             fetchNotes({ pageParam, searchQuery: debouncedSearch }),
         getNextPageParam: (lastPage) => lastPage.nextCursor,
-        initialPageParam: undefined,
+        initialPageParam: undefined as PageParam,
         enabled: !!user,
+        refetchOnMount: "always", // важно: гарантируем первичный фетч после маунта
     });
 
-    const notes = data?.pages.flatMap((page) => page.notes) ?? [];
+    const squashToFirstPage = () => {
+        if (!user?.uid) return;
+        const key: [string, string | undefined, string] = [
+            "notes",
+            user.uid,
+            debouncedSearch,
+        ];
+        queryClient.setQueryData<InfiniteData<FetchNotesResult>>(key, (old) => {
+            if (!old) return old;
+            return {
+                pages: old.pages.slice(0, 1),
+                pageParams: old.pageParams.slice(0, 1),
+            };
+        });
+    };
+
+    // НОВЫЙ мягкий сброс при смене пользователя: схлопнуть + инвалидация (без removeQueries)
+    useEffect(() => {
+        if (!user?.uid) return;
+        squashToFirstPage();
+        queryClient.invalidateQueries({
+            queryKey: ["notes", user.uid],
+            exact: false,
+        });
+    }, [user?.uid, queryClient]);
+
+    const notes: Note[] = data?.pages.flatMap((page) => page.notes) ?? [];
 
     // ... мутації create, update, delete залишаються без змін ...
     const createNoteMutation = useMutation({
         mutationFn: createNote,
         onSuccess: () => {
+            // спочатку схлопуємо до 1-ї сторінки, потім рефетчимо
+            squashToFirstPage();
             queryClient.invalidateQueries({
                 queryKey: ["notes", user?.uid, debouncedSearch],
             });
@@ -81,6 +118,7 @@ const App = () => {
         mutationFn: (variables: { noteId: string; noteData: NewNotePayload }) =>
             updateNote(variables.noteId, variables.noteData),
         onSuccess: () => {
+            squashToFirstPage();
             queryClient.invalidateQueries({
                 queryKey: ["notes", user?.uid, debouncedSearch],
             });
@@ -93,6 +131,7 @@ const App = () => {
     const deleteNoteMutation = useMutation({
         mutationFn: deleteNote,
         onSuccess: () => {
+            squashToFirstPage();
             queryClient.invalidateQueries({
                 queryKey: ["notes", user?.uid, debouncedSearch],
             });

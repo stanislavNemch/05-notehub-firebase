@@ -28,22 +28,21 @@ export const fetchNotes = async ({
     searchQuery,
 }: FetchNotesParams) => {
     const user = auth.currentUser;
-    if (!user) {
-        return { notes: [], nextCursor: undefined };
-    }
+    if (!user) return { notes: [], nextCursor: undefined };
 
     const notesPerPage = 12;
     const notesCollectionRef = collection(db, "notes");
 
-    // Створюємо масив умов для запиту
-    const constraints: QueryConstraint[] = [
-        where("userId", "==", user.uid),
-        orderBy("createdAt", "desc"),
-    ];
+    const constraints: QueryConstraint[] = [where("userId", "==", user.uid)];
 
-    if (searchQuery) {
+    if (searchQuery && searchQuery.trim() !== "") {
+        // Сначала сортируем по полю фильтра (Firestore requirement), затем по дате
         constraints.push(where("title", ">=", searchQuery));
         constraints.push(where("title", "<=", searchQuery + "\uf8ff"));
+        constraints.push(orderBy("title"));
+        constraints.push(orderBy("createdAt", "desc"));
+    } else {
+        constraints.push(orderBy("createdAt", "desc"));
     }
 
     if (pageParam) {
@@ -60,7 +59,6 @@ export const fetchNotes = async ({
         ...doc.data(),
     })) as Note[];
 
-    // ВИПРАВЛЕННЯ ДЛЯ "LOAD MORE": Якщо нотаток менше, ніж ліміт, наступної сторінки немає
     const lastVisible = querySnapshot.docs[querySnapshot.docs.length - 1];
     const nextCursor =
         querySnapshot.docs.length === notesPerPage ? lastVisible : undefined;
@@ -68,7 +66,6 @@ export const fetchNotes = async ({
     return { notes, nextCursor };
 };
 
-// ... функції createNote, deleteNote, updateNote залишаються без змін ...
 export const createNote = async (noteData: NewNotePayload) => {
     const user = auth.currentUser;
     if (!user) throw new Error("User is not authenticated!");

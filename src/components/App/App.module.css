@@ -5,6 +5,18 @@
     padding: 0 16px 16px;
 }
 
+.toolbar {
+    margin-bottom: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px; /* Додамо симетричні відступи */
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+    flex-wrap: wrap; /* Дозволяємо перенос елементів */
+    gap: 12px; /* Додаємо відступ між елементами */
+}
+
 .userInfo {
     display: flex;
     align-items: center;
@@ -13,7 +25,9 @@
 .userInfo p {
     margin: 0;
     font-weight: 500;
+    white-space: nowrap; /* Забороняємо перенос тексту */
 }
+
 .buttonLogout {
     padding: 6px 12px;
     font-size: 16px;
@@ -28,14 +42,10 @@
     background-color: #0b5ed7;
 }
 
-.toolbar {
-    margin-bottom: 16px;
+.loadMoreContainer {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 16px 0;
-    background-color: #f8f9fa;
-    border-bottom: 1px solid #dee2e6;
+    justify-content: center;
+    margin-top: 16px;
 }
 
 .button {
@@ -53,8 +63,16 @@
     background-color: #0b5ed7;
 }
 
-.loadMoreContainer {
-    display: flex;
-    justify-content: center;
-    margin-top: 24px;
+/* Правила для екранів шириною 768px або менше */
+@media (max-width: 768px) {
+    .toolbar {
+        flex-direction: column; /* Розташовуємо елементи в колонку */
+        align-items: stretch; /* Розтягуємо їх на всю ширину */
+    }
+
+    .userInfo {
+        /* Розносимо текст та кнопку "Logout" по краях */
+        justify-content: space-between;
+        width: 100%; /* Займаємо всю ширину */
+    }
 }
