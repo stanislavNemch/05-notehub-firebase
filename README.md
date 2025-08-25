@@ -34,20 +34,22 @@
 
 Архітектура проєкту побудована навколо компонентного підходу та чіткого розділення логіки.
 
+```
 src/
-├── components/ # Папка з React-компонентами
-│ ├── App/ # Головний компонент-контейнер
-│ ├── AuthForm/ # Форма реєстрації та входу
-│ ├── Modal/ # Універсальне модальне вікно
-│ ├── NoteForm/ # Форма для створення/редагування нотатки
-│ ├── NoteList/ # Список нотаток
-│ └── ... # Інші UI-компоненти
-├── services/ # Логіка для роботи з Firebase
-│ └── noteService.ts
-├── types/ # Загальні типи TypeScript
-│ └── note.ts
-├── firebase.ts # Файл ініціалізації Firebase
-└── main.tsx # Вхідна точка додатку
+├── components/         # Папка з React-компонентами
+│   ├── App/            # Головний компонент-контейнер
+│   ├── AuthForm/       # Форма реєстрації та входу
+│   ├── Modal/          # Універсальне модальне вікно
+│   ├── NoteForm/       # Форма для створення/редагування нотатки
+│   ├── NoteList/       # Список нотаток
+│   └── ...             # Інші UI-компоненти
+├── services/           # Логіка для роботи з Firebase
+│   └── noteService.ts
+├── types/              # Загальні типи TypeScript
+│   └── note.ts
+├── firebase.ts         # Файл ініціалізації Firebase
+└── main.tsx            # Вхідна точка додатку
+```
 
 ---
 
@@ -99,20 +101,22 @@ src/
 
 The project architecture is built around a component-based approach and a clear separation of concerns.
 
+```
 src/
-├── components/ # Folder with React components
-│ ├── App/ # Main container component
-│ ├── AuthForm/ # Registration and login form
-│ ├── Modal/ # Reusable modal window
-│ ├── NoteForm/ # Form for creating/editing a note
-│ ├── NoteList/ # List of notes
-│ └── ... # Other UI components
-├── services/ # Logic for interacting with Firebase
-│ └── noteService.ts
-├── types/ # Global TypeScript types
-│ └── note.ts
-├── firebase.ts # Firebase initialization file
-└── main.tsx # Application entry point
+├── components/         # Folder with React components
+│   ├── App/            # Main container component
+│   ├── AuthForm/       # Registration and login form
+│   ├── Modal/          # Reusable modal window
+│   ├── NoteForm/       # Form for creating/editing a note
+│   ├── NoteList/       # List of notes
+│   └── ...             # Other UI components
+├── services/           # Logic for interacting with Firebase
+│   └── noteService.ts
+├── types/              # Global TypeScript types
+│   └── note.ts
+├── firebase.ts         # Firebase initialization file
+└── main.tsx            # Application entry point
+```
 
 ---
 
