@@ -23,7 +23,15 @@ interface FetchNotesParams {
     searchQuery?: string;
 }
 
-// ОБНОВЛЕННАЯ функция для генерации ключевых слов и их префиксов
+/**
+ * Генерує масив ключових слів та їх префіксів для повнотекстового пошуку.
+ * Це необхідно для обходу обмежень Firestore, який не підтримує нативний пошук по підрядку.
+ * Ми створюємо всі можливі префікси для кожного слова в тексті нотатки.
+ * @param {string} title - Заголовок нотатки.
+ * @param {string} content - Вміст нотатки.
+ * @param {string} tag - Тег нотатки.
+ * @returns {string[]} Масив унікальних ключових слів.
+ */
 const generateKeywords = (
     title: string,
     content: string,
@@ -32,10 +40,10 @@ const generateKeywords = (
     const keywords = new Set<string>();
     const text = `${title} ${content} ${tag}`.toLowerCase();
 
-    // Разбиваем текст на отдельные слова
+    // Розбиваємо текст на окремі слова
     const words = text.split(/[\s,.;!?]+/).filter(Boolean);
 
-    // Для каждого слова генерируем все возможные префиксы
+    // Для кожного слова генеруємо всі можливі префікси
     for (const word of words) {
         for (let i = 1; i <= word.length; i++) {
             keywords.add(word.substring(0, i));
@@ -45,6 +53,12 @@ const generateKeywords = (
     return Array.from(keywords);
 };
 
+/**
+ * Завантажує порцію нотаток для поточного користувача з Firestore.
+ * Підтримує пагінацію (нескінченне прокручування) та пошук.
+ * @param {FetchNotesParams} params - Параметри для завантаження, включаючи курсор пагінації та пошуковий запит.
+ * @returns {Promise<{notes: Note[], nextCursor: QueryDocumentSnapshot<DocumentData> | undefined}>} Об'єкт з масивом нотаток та курсором для наступної сторінки.
+ */
 export const fetchNotes = async ({
     pageParam,
     searchQuery,
@@ -58,14 +72,14 @@ export const fetchNotes = async ({
     const constraints: QueryConstraint[] = [where("userId", "==", user.uid)];
 
     if (searchQuery && searchQuery.trim() !== "") {
-        // ОБНОВЛЕНА логика поиска: ищем по точному совпадению с префиксом в массиве
+        // шукаємо по точному співпадінню з префіксом в масиві
         const searchTerm = searchQuery.toLowerCase().trim();
         if (searchTerm) {
             constraints.push(
                 where("searchableKeywords", "array-contains", searchTerm)
             );
         }
-        // ВАЖНО: При поиске сортировка по дате невозможна из-за ограничений Firestore
+        // При пошуку сортування за датою неможливе через обмеження Firestore
     } else {
         constraints.push(orderBy("createdAt", "desc"));
     }
@@ -91,12 +105,14 @@ export const fetchNotes = async ({
     return { notes, nextCursor };
 };
 
-// Функции createNote и updateNote используют обновленную generateKeywords,
-// поэтому их код остается прежним, но результат работы будет новым.
-
+/**
+ * Створює нову нотатку в Firestore для поточного користувача.
+ * @param {NewNotePayload} noteData - Дані для нової нотатки.
+ * @returns {Promise<string>} ID створеного документа.
+ */
 export const createNote = async (noteData: NewNotePayload) => {
     const user = auth.currentUser;
-    if (!user) throw new Error("User is not authenticated!");
+    if (!user) throw new Error("Користувач не автентифікований!");
 
     const keywords = generateKeywords(
         noteData.title,
@@ -113,11 +129,20 @@ export const createNote = async (noteData: NewNotePayload) => {
     return docRef.id;
 };
 
+/**
+ * Видаляє нотатку з Firestore за її ID.
+ * @param {string} noteId - ID нотатки, яку потрібно видалити.
+ */
 export const deleteNote = async (noteId: string) => {
     const noteDocRef = doc(db, "notes", noteId);
     await deleteDoc(noteDocRef);
 };
 
+/**
+ * Оновлює існуючу нотатку в Firestore.
+ * @param {string} noteId - ID нотатки, яку потрібно оновити.
+ * @param {NewNotePayload} noteData - Нові дані для нотатки.
+ */
 export const updateNote = async (noteId: string, noteData: NewNotePayload) => {
     const noteDocRef = doc(db, "notes", noteId);
     const keywords = generateKeywords(

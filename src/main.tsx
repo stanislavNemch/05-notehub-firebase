@@ -8,18 +8,28 @@ import App from "./components/App/App";
 
 import "./index.css";
 
-// Створюємо екземпляр QueryClient для керування серверним станом.
+// Створюємо єдиний екземпляр QueryClient.
+// Цей клієнт буде керувати кешуванням, завантаженням та оновленням
+// усіх серверних даних у додатку.
 const queryClient = new QueryClient();
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
     <React.StrictMode>
-        {/* Надаємо доступ до queryClient усім дочірнім компонентам 
-      через QueryClientProvider.
+        {/* QueryClientProvider "огортає" наш додаток (компонент App).
+        Це дозволяє будь-якому компоненту всередині отримати доступ
+        до кешу та функцій TanStack Query через кастомні хуки.
     */}
         <QueryClientProvider client={queryClient}>
+            {/* Основний компонент нашого додатку */}
             <App />
+
+            {/* Toaster - компонент для відображення спливаючих повідомлень (тостів).
+            Ми розміщуємо його тут, щоб повідомлення були доступні з будь-якої точки додатку. */}
             <Toaster position="top-right" />
-            {/* Інструменти розробника для TanStack Query */}
+
+            {/* ReactQueryDevtools - корисний інструмент для розробки.
+            Він дозволяє візуально перевіряти стан кешу, запити та їхні дані.
+            Він не буде включений у фінальну збірку додатку. */}
             <ReactQueryDevtools initialIsOpen={false} />
         </QueryClientProvider>
     </React.StrictMode>
