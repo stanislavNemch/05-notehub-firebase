@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
     useQueryClient,
     useMutation,
@@ -7,7 +7,6 @@ import {
 } from "@tanstack/react-query";
 import { onAuthStateChanged, signOut, type User } from "firebase/auth";
 import toast from "react-hot-toast";
-import { useDebounce } from "use-debounce";
 import { auth } from "../../firebase";
 import {
     fetchNotes,
@@ -35,7 +34,6 @@ const App = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingNote, setEditingNote] = useState<Note | null>(null);
     const [searchQuery, setSearchQuery] = useState("");
-    const [debouncedSearch] = useDebounce(searchQuery, 500);
 
     const queryClient = useQueryClient();
 
@@ -62,21 +60,21 @@ const App = () => {
         [string, string | undefined, string],
         PageParam
     >({
-        queryKey: ["notes", user?.uid, debouncedSearch],
+        queryKey: ["notes", user?.uid, searchQuery],
         queryFn: ({ pageParam }) =>
-            fetchNotes({ pageParam, searchQuery: debouncedSearch }),
+            fetchNotes({ pageParam, searchQuery: searchQuery }),
         getNextPageParam: (lastPage) => lastPage.nextCursor,
         initialPageParam: undefined as PageParam,
         enabled: !!user,
-        refetchOnMount: "always", // важно: гарантируем первичный фетч после маунта
+        refetchOnMount: "always",
     });
 
-    const squashToFirstPage = () => {
+    const squashToFirstPage = useCallback(() => {
         if (!user?.uid) return;
         const key: [string, string | undefined, string] = [
             "notes",
             user.uid,
-            debouncedSearch,
+            searchQuery,
         ];
         queryClient.setQueryData<InfiniteData<FetchNotesResult>>(key, (old) => {
             if (!old) return old;
@@ -85,9 +83,8 @@ const App = () => {
                 pageParams: old.pageParams.slice(0, 1),
             };
         });
-    };
+    }, [user?.uid, searchQuery, queryClient]);
 
-    // НОВЫЙ мягкий сброс при смене пользователя: схлопнуть + инвалидация (без removeQueries)
     useEffect(() => {
         if (!user?.uid) return;
         squashToFirstPage();
@@ -95,18 +92,16 @@ const App = () => {
             queryKey: ["notes", user.uid],
             exact: false,
         });
-    }, [user?.uid, queryClient]);
+    }, [user?.uid, queryClient, squashToFirstPage]);
 
     const notes: Note[] = data?.pages.flatMap((page) => page.notes) ?? [];
 
-    // ... мутації create, update, delete залишаються без змін ...
     const createNoteMutation = useMutation({
         mutationFn: createNote,
         onSuccess: () => {
-            // спочатку схлопуємо до 1-ї сторінки, потім рефетчимо
             squashToFirstPage();
             queryClient.invalidateQueries({
-                queryKey: ["notes", user?.uid, debouncedSearch],
+                queryKey: ["notes", user?.uid, searchQuery],
             });
             toast.success("Note created successfully!");
             closeModal();
@@ -120,7 +115,7 @@ const App = () => {
         onSuccess: () => {
             squashToFirstPage();
             queryClient.invalidateQueries({
-                queryKey: ["notes", user?.uid, debouncedSearch],
+                queryKey: ["notes", user?.uid, searchQuery],
             });
             toast.success("Note updated successfully!");
             closeModal();
@@ -133,7 +128,7 @@ const App = () => {
         onSuccess: () => {
             squashToFirstPage();
             queryClient.invalidateQueries({
-                queryKey: ["notes", user?.uid, debouncedSearch],
+                queryKey: ["notes", user?.uid, searchQuery],
             });
             toast.success("Note deleted successfully!");
         },
